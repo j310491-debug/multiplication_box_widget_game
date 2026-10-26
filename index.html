@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>神奇工廠・箱子乘法大冒險 (橫排 × 直排 乘加乘減)</title>
+  <!-- Tailwind CSS provided by gstatic -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes float-box {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes stamp-pop {
+      0% { transform: scale(3) rotate(-25deg); opacity: 0; }
+      60% { transform: scale(0.9) rotate(-10deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+    }
+    @keyframes wrong-shake {
+      0%, 100% { transform: translateX(0); }
+      15%, 45%, 75% { transform: translateX(-12px) rotate(-1.5deg); }
+      30%, 60%, 90% { transform: translateX(12px) rotate(1.5deg); }
+    }
+    @keyframes cry-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-10px) scale(1.15); }
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @keyframes highlight-glow {
+      0%, 100% { background-color: rgba(254, 240, 138, 0.8); transform: scale(1.05); }
+      50% { background-color: rgba(253, 224, 71, 1); transform: scale(1.12); }
+    }
+
+    .animate-float-box { animation: float-box 4s ease-in-out infinite; }
+    .animate-shake { animation: wrong-shake 0.6s ease-in-out; }
+    .animate-stamp { animation: stamp-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .animate-cry { animation: cry-bounce 0.8s ease-in-out infinite; }
+    .animate-pulse-ring { animation: pulse-ring 1.2s infinite; }
+    .highlight-active { animation: highlight-glow 0.8s infinite; }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.6);
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .lcd-font {
+      font-family: 'Courier New', Courier, monospace, system-ui;
+      letter-spacing: 1.5px;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 via-sky-50 to-emerald-50 min-h-screen text-slate-800 font-sans p-2 sm:p-4 antialiased no-select">
+
+  <!-- Main Container -->
+  <div class="max-w-6xl mx-auto flex flex-col gap-3 sm:gap-4 relative">
+
+    <!-- Top Global Header -->
+    <header class="bg-white/95 backdrop-blur-md rounded-3xl p-3 sm:p-4 shadow-md border-2 border-amber-200 flex flex-wrap items-center justify-between gap-3">
+      <!-- Title & Branding -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-3xl shadow-md text-white animate-float-box">
+          📦
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-amber-600 via-orange-500 to-emerald-600 bg-clip-text text-transparent">
+              神奇工廠・箱子乘法大冒險
+            </h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300">
+              橫排 × 直排
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-500 font-bold">
+            利用「橫排數量 × 直排數量」計算箱中總數，按計算機出貨！
+          </p>
+        </div>
+      </div>
+
+      <!-- Header Status: Timer, Score, Sound/Voice -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        
+        <!-- Practice Stopwatch Timer Pill (Cumulative in R1/R2) -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-sky-50 border-2 border-sky-300 shadow-xs">
+          <span class="text-lg animate-pulse">⏱️</span>
+          <div class="flex flex-col leading-tight">
+            <span id="timer-title-text" class="text-[10px] font-black text-sky-600 uppercase">練習累計計時</span>
+            <span id="timer-display" class="text-base sm:text-lg font-black text-sky-700 lcd-font">00:00</span>
+          </div>
+        </div>
+
+        <!-- Score Badge -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-xs">
+          <span class="text-lg">⭐</span>
+          <div class="flex flex-col leading-tight">
+            <span class="text-[10px] font-black text-amber-600 uppercase">出貨點數</span>
+            <span id="current-score-text" class="text-base sm:text-lg font-black text-amber-700">0</span>
+          </div>
+        </div>
+
+        <!-- Home Button -->
+        <button id="nav-home-btn" class="p-2 sm:px-3 sm:py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1 border border-slate-300" title="回主頁選單">
+          <span>🏠</span>
+          <span class="hidden sm:inline">主頁</span>
+        </button>
+
+        <!-- Sound & Voice Toggles -->
+        <button id="voice-toggle-btn" class="p-2 sm:p-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-700 font-black text-sm transition border border-emerald-200" title="語音開關">
+          🗣️
+        </button>
+        <button id="sound-toggle-btn" class="p-2 sm:p-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 font-black text-sm transition border border-amber-200" title="音效開關">
+          🔔
+        </button>
+      </div>
+    </header>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 1: HOME WELCOME & 4 ROUNDS SELECTOR -->
+    <!-- ================================================================= -->
+    <main id="home-view" class="flex flex-col gap-4">
+      <!-- Welcome Hero Banner -->
+      <div class="bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400 rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="z-10 text-center sm:text-left">
+          <span class="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-black tracking-wide uppercase">
+            乘法陣列思維啟蒙・10 × 10 範圍
+          </span>
+          <h2 class="text-2xl sm:text-4xl font-black mt-2 drop-shadow-sm">
+            箱子裡有多少東西？
+          </h2>
+          <p class="text-xs sm:text-sm text-white/95 font-bold mt-1.5 max-w-lg leading-relaxed">
+            不用一個個慢慢數！只要看<strong>「橫排有幾個」</strong>乘以<strong>「直排有幾排」</strong>，按下計算機就能立刻算出箱子裡的總數量！
+          </p>
+        </div>
+        <div class="text-6xl sm:text-7xl animate-float-box drop-shadow-md">
+          📦🍎🍩
+        </div>
+      </div>
+
+      <!-- 4 Rounds Selection Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- Round 1: Beginner with Count Hint & Animation Tutorial -->
+        <div class="bg-white/95 rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-emerald-200 hover:border-emerald-400 transition flex flex-col justify-between gap-3 relative group">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800">
+              第一回合・初階啟蒙
+            </span>
+            <span class="text-2xl">🌱</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-emerald-900 group-hover:text-emerald-600 transition">
+              數量提示 ＋ 動畫教學
+            </h3>
+            <p class="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+              開局附帶生動動畫教學，提示橫排與直排數量標尺，累計練習時間！
+            </p>
+          </div>
+          <div class="bg-emerald-50 rounded-2xl p-2 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+            <span>🎬</span>
+            <span>有教學示範・時間持續累計</span>
+          </div>
+          <button onclick="Game.startRound(1)" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
+            <span>進入第一回合</span>
+            <span>▶</span>
+          </button>
+        </div>
+
+        <!-- Round 2: Advanced (No Hint, Count by Yourself, Cumulative Timer) -->
+        <div class="bg-white/95 rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-amber-200 hover:border-amber-400 transition flex flex-col justify-between gap-3 relative group">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">
+              第二回合・進階挑戰
+            </span>
+            <span class="text-2xl">🔍</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-amber-900 group-hover:text-amber-600 transition">
+              自己數橫排與直排
+            </h3>
+            <p class="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+              無數量提示！自己觀察橫排與直排數量，接續累計練習時間！
+            </p>
+          </div>
+          <div class="bg-amber-50 rounded-2xl p-2 flex items-center gap-1.5 text-xs font-bold text-amber-700">
+            <span>⏱️</span>
+            <span>接續第一回合累計練習時間</span>
+          </div>
+          <button onclick="Game.startRound(2)" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
+            <span>進入第二回合</span>
+            <span>▶</span>
+          </button>
+        </div>
+
+        <!-- Round 3: Speed Challenge (15s Countdown, Shake & Crying Face on Miss) -->
+        <div class="bg-white/95 rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-rose-200 hover:border-rose-400 transition flex flex-col justify-between gap-3 relative group">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800">
+              第三回合・極速出貨
+            </span>
+            <span class="text-2xl">⚡</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-rose-900 group-hover:text-rose-600 transition">
+              每題 15 秒限時賽
+            </h3>
+            <p class="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+              每箱 15 秒倒數！超時或答錯會觸發劇烈震動與哭臉效果，答對賺高分！
+            </p>
+          </div>
+          <div class="bg-rose-50 rounded-2xl p-2 flex items-center gap-1.5 text-xs font-bold text-rose-700">
+            <span>😭</span>
+            <span>倒數 15 秒・震動與哭臉懲罰</span>
+          </div>
+          <button onclick="Game.startRound(3)" class="w-full py-2.5 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
+            <span>進入第三回合</span>
+            <span>▶</span>
+          </button>
+        </div>
+
+        <!-- Round 4: Multiplication with Subtraction/Addition Application -->
+        <div class="bg-white/95 rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-indigo-200 hover:border-indigo-400 transition flex flex-col justify-between gap-3 relative group">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800">
+              第四回合・乘減乘加
+            </span>
+            <span class="text-2xl">🧩</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-indigo-900 group-hover:text-indigo-600 transition">
+              乘法 ＋ 減法 / 加法
+            </h3>
+            <p class="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+              開局專屬教學！用乘法算出滿箱後，減去缺少或加上增加的數量求總數！
+            </p>
+          </div>
+          <div class="bg-indigo-50 rounded-2xl p-2 flex items-center gap-1.5 text-xs font-bold text-indigo-700">
+            <span>🎬</span>
+            <span>有專屬教學・實用乘加乘減</span>
+          </div>
+          <button onclick="Game.startRound(4)" class="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 active:scale-95 text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
+            <span>進入第四回合</span>
+            <span>▶</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Reset Score Data -->
+      <div class="flex items-center justify-center gap-3 mt-2">
+        <button id="reset-all-score-btn" class="text-xs font-bold text-slate-400 hover:text-rose-500 underline transition">
+          ↺ 重設歷史出貨點數與練習累積時間
+        </button>
+      </div>
+    </main>
+
+    <!-- ================================================================= -->
+    <!-- TUTORIAL MODAL: ROUND 1 ANIMATION WALKTHROUGH -->
+    <!-- ================================================================= -->
+    <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+      <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl border-4 border-emerald-300 flex flex-col gap-4 relative">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl animate-bounce">🎬</span>
+            <h3 class="text-base sm:text-lg font-black text-slate-800">
+              第一回合引導：箱子乘法怎麼算？
+            </h3>
+          </div>
+          <button id="skip-tutorial-btn" class="text-xs font-black px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600">
+            ⏩ 略過教學直接挑戰
+          </button>
+        </div>
+
+        <!-- Animated Stage Box Demonstration -->
+        <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-200 flex flex-col items-center justify-center gap-3 relative min-h-[190px]">
+          
+          <div id="tutorial-step-text" class="text-xs sm:text-sm font-black text-amber-900 bg-white px-3 py-1 rounded-full border border-amber-300 shadow-xs text-center">
+            步驟 1：先看「橫排」一橫排有幾個？
+          </div>
+
+          <!-- Mini 3x4 Sample Grid Box -->
+          <div id="tutorial-grid" class="grid grid-cols-4 gap-1.5 p-2 bg-white rounded-xl border-2 border-amber-300">
+            <!-- 12 mini apples (3 rows x 4 cols) -->
+          </div>
+
+          <!-- Formula Step Visual -->
+          <div id="tutorial-calc-formula" class="text-sm font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-300">
+            橫排 4 個 × 直排 3 排 ＝ 12 個
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 font-bold text-center">
+          「橫排數量」乘以「直排數量」，就能一口氣算出箱子裡所有的物品！
+        </p>
+
+        <div class="flex gap-2">
+          <button id="replay-tutorial-btn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+            🔄 重播教學動畫
+          </button>
+          <button id="start-round1-btn" class="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition active:scale-95">
+            ✨ 我學會了，開始出貨！
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TUTORIAL MODAL: ROUND 4 ANIMATION (Multiplication + Add/Sub) -->
+    <!-- ================================================================= -->
+    <div id="tutorial-r4-modal" class="fixed inset-0 bg-slate-900/65 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+      <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl border-4 border-indigo-300 flex flex-col gap-4 relative">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl animate-bounce">🎬</span>
+            <h3 class="text-base sm:text-lg font-black text-indigo-950">
+              第四回合引導：乘減與乘加怎麼算？
+            </h3>
+          </div>
+          <button id="skip-r4-tutorial-btn" class="text-xs font-black px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600">
+            ⏩ 略過教學直接挑戰
+          </button>
+        </div>
+
+        <!-- Demonstration Stage -->
+        <div class="bg-indigo-50/60 rounded-2xl p-4 border-2 border-indigo-200 flex flex-col items-center justify-center gap-3 relative min-h-[220px]">
+          
+          <div id="tut-r4-step-text" class="text-xs sm:text-sm font-black text-indigo-900 bg-white px-3 py-1 rounded-full border border-indigo-300 shadow-xs text-center">
+            步驟 1：先用乘法算出「滿箱數量」👉 4 × 3 ＝ 12 個
+          </div>
+
+          <!-- Sample Grid -->
+          <div class="flex items-center justify-center gap-2">
+            <div id="tut-r4-grid" class="grid grid-cols-4 gap-1.5 p-2 bg-white rounded-xl border-2 border-indigo-300">
+              <!-- Injected by JS -->
+            </div>
+            <!-- Bonus Extra slot for Add demo -->
+            <div id="tut-r4-bonus-slot" class="hidden p-2 rounded-xl bg-amber-100 border-2 border-dashed border-amber-400 flex flex-col items-center justify-center text-xl">
+              <span>🎁</span>
+              <span class="text-[10px] font-black text-amber-800">+2</span>
+            </div>
+          </div>
+
+          <!-- Formula Step Visual -->
+          <div id="tut-r4-formula" class="text-xs sm:text-sm font-black text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-300">
+            滿箱 12 個 － 缺少 2 個 ＝ 10 個
+          </div>
+        </div>
+
+        <p id="tut-r4-summary-text" class="text-xs text-slate-500 font-bold text-center">
+          先乘出滿箱總數，箱子有缺就【減去缺少】，有額外贈送就【加上增加】！
+        </p>
+
+        <div class="flex gap-2">
+          <button id="replay-r4-tutorial-btn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+            🔄 重播教學動畫
+          </button>
+          <button id="start-round4-btn" class="flex-1 py-2.5 bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition active:scale-95">
+            ✨ 我學會了，開始第四回合！
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 2: ACTIVE GAME PLAY AREA -->
+    <!-- ================================================================= -->
+    <div id="game-view" class="flex flex-col gap-3 hidden">
+      
+      <!-- Status Progress Bar -->
+      <div class="bg-white/95 rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span id="round-badge-tag" class="px-3 py-1 rounded-xl text-xs font-black bg-amber-600 text-white">
+            第一回合：初階啟蒙
+          </span>
+          <span class="text-xs font-bold text-slate-600">
+            第 <span id="game-q-curr" class="text-amber-600 font-black text-sm">1</span> / 10 箱
+          </span>
+        </div>
+
+        <!-- Round 3: 15-Second Countdown Timer Bar (Only visible in Round 3) -->
+        <div id="round3-timer-wrapper" class="hidden flex items-center gap-2 bg-rose-50 border-2 border-rose-300 px-3 py-1 rounded-2xl">
+          <span class="text-base animate-pulse">⏳</span>
+          <span class="text-xs font-black text-rose-700">倒數限時：</span>
+          <span id="r3-countdown-display" class="text-lg font-black text-rose-600 lcd-font">15 秒</span>
+          <div class="w-24 bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div id="r3-countdown-progress" class="bg-rose-500 h-full w-full transition-all duration-1000 ease-linear"></div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center gap-2">
+          <button id="restart-game-btn" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1">
+            <span>↺</span>
+            <span>重置挑戰</span>
+          </button>
+          <button id="exit-game-btn" class="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition border border-rose-200 flex items-center gap-1">
+            <span>✕</span>
+            <span>回主頁</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Game Arena: 12 Cols Grid (Left: Storage Box 7 cols, Right: Calculator 5 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start">
+        
+        <!-- LEFT COLUMN: The Array Box Stage (7 cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-3">
+          
+          <!-- Box Container Card -->
+          <div id="box-card-container" class="bg-white/95 rounded-3xl p-4 sm:p-5 shadow-md border-2 border-amber-200 flex flex-col gap-3 relative overflow-hidden transition-all duration-300">
+            
+            <!-- Question Prompt Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">📦</span>
+                <div>
+                  <h3 class="font-black text-slate-800 text-sm sm:text-base">
+                    出貨箱檢驗區
+                  </h3>
+                  <span id="box-mode-subtitle" class="text-xs font-bold text-slate-400">
+                    箱內物品全開・請觀察橫排與直排
+                  </span>
+                </div>
+              </div>
+
+              <!-- Read Prompt Voice Button -->
+              <button id="read-box-prompt-btn" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 flex items-center gap-1 shadow-xs transition">
+                <span>🔊</span>
+                <span>唸題目</span>
+              </button>
+            </div>
+
+            <!-- Dimension Banner (Shows in Round 1 & Round 4) -->
+            <div id="dimension-banner" class="flex items-center justify-between bg-amber-50/80 rounded-2xl p-2.5 border border-amber-200 text-xs font-bold">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="px-2 py-0.5 rounded-lg bg-sky-100 text-sky-800 font-black">
+                  橫排 (一排有幾個)：<span id="prompt-row-num" class="text-sm text-sky-600 font-black">6</span>
+                </span>
+                <span class="text-slate-400">×</span>
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 font-black">
+                  直排 (共有幾排)：<span id="prompt-col-num" class="text-sm text-emerald-600 font-black">4</span>
+                </span>
+              </div>
+              <span id="theme-item-name" class="text-amber-800 font-black hidden sm:inline">
+                🍎 新鮮紅蘋果
+              </span>
+            </div>
+
+            <!-- Round 4 Extra Info Banner (Missing / Added notice) -->
+            <div id="r4-delta-banner" class="hidden bg-indigo-50 rounded-2xl p-2.5 border border-indigo-200 text-xs font-black text-indigo-900 flex justify-between items-center">
+              <span id="r4-delta-text">⚠️ 箱子缺少了 2 個空位！請算出滿箱後減去缺少數量！</span>
+              <span id="r4-delta-badge" class="px-2 py-0.5 bg-rose-500 text-white rounded-lg text-xs font-black">－2 缺少</span>
+            </div>
+
+            <!-- No-Hint Prompt for Round 2 & 3 -->
+            <div id="no-hint-banner" class="hidden bg-sky-50 rounded-2xl p-2.5 border border-sky-200 text-xs font-black text-sky-900 justify-between items-center">
+              <span>👀 本關無數量提示：請自己數數看「橫排」有幾個、「直排」有幾排！</span>
+              <span id="theme-item-name-alt" class="text-amber-800 font-black">🍎</span>
+            </div>
+
+            <!-- Storage Box Array Container with Rulers -->
+            <div class="relative bg-gradient-to-br from-amber-100/50 via-orange-50/40 to-amber-100/30 rounded-2xl p-3 sm:p-4 border-4 border-amber-300 shadow-inner flex flex-col items-center justify-center overflow-x-auto custom-scrollbar min-h-[300px]">
+              
+              <!-- Top Horizontal Ruler Bar (橫排數量) -->
+              <div id="top-ruler-wrapper" class="flex items-center justify-center gap-1 mb-2 ml-8 sm:ml-10 select-none">
+                <div class="text-[11px] font-black text-sky-700 bg-sky-100 px-2 py-0.5 rounded-md border border-sky-300 flex items-center gap-1">
+                  <span>橫排 ➔</span>
+                  <span id="top-ruler-chips-container" class="flex gap-1">
+                    <!-- Numbers 1 to A (or blank dots in R2/R3) -->
+                  </span>
+                </div>
+              </div>
+
+              <!-- Middle: Left Vertical Ruler + 2D Grid Array Area -->
+              <div class="flex items-center justify-center gap-2 select-none">
+                
+                <!-- Left Vertical Ruler Bar (直排數量) -->
+                <div id="left-ruler-wrapper" class="flex flex-col items-center justify-center gap-1">
+                  <div class="text-[11px] font-black text-emerald-700 bg-emerald-100 px-1 py-1 rounded-md border border-emerald-300 flex flex-col items-center">
+                    <span>直</span>
+                    <span>排</span>
+                    <span>↓</span>
+                    <span id="left-ruler-chips-container" class="flex flex-col gap-1 mt-1">
+                      <!-- Numbers 1 to B (or blank dots in R2/R3) -->
+                    </span>
+                  </div>
+                </div>
+
+                <!-- The Physical Storage Box (Holds all visible items) -->
+                <div id="storage-box-grid" class="bg-white/95 rounded-2xl p-2.5 sm:p-3 shadow-md border-2 border-amber-300 grid gap-1 sm:gap-1.5 transition-transform duration-300">
+                  <!-- Injected cells with items -->
+                </div>
+
+              </div>
+
+              <!-- Round 4: Extra Bonus Container (If Type is 'add') -->
+              <div id="r4-bonus-tray" class="hidden mt-3 p-2 bg-amber-100/80 rounded-2xl border-2 border-dashed border-amber-400 flex items-center gap-2 text-xs font-black text-amber-900">
+                <span>🎁 額外加贈數量：</span>
+                <div id="r4-bonus-items-row" class="flex items-center gap-1">
+                  <!-- Injected extra items -->
+                </div>
+              </div>
+
+              <!-- Stamp Animation Overlay (Appears on correct delivery) -->
+              <div id="box-stamp-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
+                <div class="border-4 border-emerald-600 text-emerald-700 px-6 py-2 rounded-2xl font-black text-2xl sm:text-3xl bg-white/90 shadow-2xl animate-stamp flex items-center gap-2">
+                  <span>✅</span>
+                  <span>合格封箱出貨！</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Repeated Addition Breakdown Helper -->
+            <div class="bg-slate-50 rounded-2xl p-2.5 border border-slate-200 flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500">
+                💡 乘法原理：一橫排有 <span id="explain-row-items" class="text-sky-600 font-black">6</span> 個，共有 <span id="explain-col-rows" class="text-emerald-600 font-black">4</span> 排
+              </span>
+              <button id="toggle-addition-explain-btn" class="text-xs font-black text-amber-600 hover:text-amber-800 underline">
+                展開連加算式
+              </button>
+            </div>
+
+            <!-- Addition Formula Expand Box (Hidden by default) -->
+            <div id="addition-explain-box" class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-mono font-bold text-amber-900 leading-relaxed hidden">
+              <!-- Injected repeated addition formula -->
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: The Interactive Calculator (Way C) (5 cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-3">
+          
+          <!-- Calculator Outer Housing -->
+          <div class="bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl border-4 border-slate-700 flex flex-col gap-3 text-white">
+            
+            <!-- Calculator Brand Header -->
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <span class="text-xs font-black tracking-wider text-slate-400 ml-1">SMART FACTORY CALC</span>
+              </div>
+              <div class="flex gap-1 bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
+                <span class="w-2.5 h-3 bg-amber-900/60 rounded-xs"></span>
+                <span class="w-2.5 h-3 bg-amber-900/60 rounded-xs"></span>
+                <span class="w-2.5 h-3 bg-amber-900/60 rounded-xs"></span>
+                <span class="w-2.5 h-3 bg-amber-900/60 rounded-xs"></span>
+              </div>
+            </div>
+
+            <!-- LCD Screen -->
+            <div class="bg-emerald-950/80 border-2 border-emerald-800/80 rounded-2xl p-3 flex flex-col items-end justify-center shadow-inner min-h-[72px]">
+              <!-- Formula / History Line -->
+              <span id="calc-formula-display" class="text-xs text-emerald-400/80 font-mono tracking-wider h-4 overflow-hidden truncate max-w-full">
+                橫排 × 直排 ＝ ？
+              </span>
+              <!-- Main Number Display -->
+              <span id="calc-main-display" class="text-3xl sm:text-4xl font-black text-emerald-300 lcd-font tracking-widest mt-1">
+                0
+              </span>
+            </div>
+
+            <p class="text-[11px] text-slate-400 font-medium px-1">
+              💡 方式 C：可直接輸入總數，也可依序按「橫排 × 直排 ＝」自動計算！
+            </p>
+
+            <!-- Calculator Keypad (4 Columns Grid) -->
+            <div class="grid grid-cols-4 gap-2 text-base font-black">
+              
+              <!-- Row 1: Clear, Backspace, Fill formula, Divide -->
+              <button class="calc-btn p-3 bg-slate-700 hover:bg-slate-600 active:scale-95 text-rose-300 rounded-xl transition shadow-xs" data-key="clear">
+                AC
+              </button>
+              <button class="calc-btn p-3 bg-slate-700 hover:bg-slate-600 active:scale-95 text-amber-300 rounded-xl transition shadow-xs" data-key="backspace">
+                ⌫
+              </button>
+              <button class="calc-btn p-3 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 rounded-xl transition shadow-xs" data-key="fill-formula" title="自動帶入橫排直排算式">
+                📝 算式
+              </button>
+              <button class="calc-btn p-3 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="div">
+                ÷
+              </button>
+
+              <!-- Row 2: 7, 8, 9, Multiply -->
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="7">7</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="8">8</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="9">9</button>
+              <button class="calc-btn p-3 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="mul">
+                ×
+              </button>
+
+              <!-- Row 3: 4, 5, 6, Subtract -->
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="4">4</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="5">5</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="6">6</button>
+              <button class="calc-btn p-3 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="sub">
+                －
+              </button>
+
+              <!-- Row 4: 1, 2, 3, Add -->
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="1">1</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="2">2</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="3">3</button>
+              <button class="calc-btn p-3 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="add">
+                ＋
+              </button>
+
+              <!-- Row 5: 0, 00, Calculate (=) -->
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="0">0</button>
+              <button class="calc-btn p-3 bg-slate-600 hover:bg-slate-500 active:scale-95 text-white rounded-xl transition shadow-xs" data-key="00">00</button>
+              <button class="calc-btn col-span-2 p-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white rounded-xl transition shadow-md" data-key="equals">
+                ＝ 計算結果
+              </button>
+
+            </div>
+
+            <!-- Submit Final Answer Button -->
+            <button id="submit-answer-btn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-500 hover:from-amber-600 hover:to-emerald-600 active:scale-95 text-white font-black text-base sm:text-lg rounded-2xl shadow-xl transition flex items-center justify-center gap-2 mt-1">
+              <span>🚀 確認出貨 / 送出答案</span>
+            </button>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- FEEDBACK POPUP MODAL (Correct Delivery or Wrong/Timeout Crying) -->
+    <!-- ================================================================= -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+      <div id="feedback-card" class="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border-4 text-center flex flex-col gap-3 relative animate-pop">
+        <div id="feedback-icon" class="text-6xl animate-bounce">🎉</div>
+        <h3 id="feedback-title" class="text-xl font-black">出貨成功！</h3>
+        
+        <!-- Explanation Body -->
+        <div id="feedback-body" class="p-3.5 rounded-2xl text-xs sm:text-sm font-bold leading-relaxed text-slate-700 bg-slate-50 border border-slate-200">
+          <!-- Injected dynamically -->
+        </div>
+
+        <button id="feedback-next-btn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm rounded-2xl shadow-md transition active:scale-95 mt-1">
+          進行下一箱出貨 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- ROUND COMPLETE CELEBRATION MODAL -->
+    <!-- ================================================================= -->
+    <div id="cleared-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 hidden">
+      <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-4 border-amber-300 text-center flex flex-col gap-3.5 animate-pop">
+        <div class="text-6xl animate-bounce">🎖️</div>
+        <h3 class="text-2xl font-black text-amber-900">恭喜完成此回合出貨挑戰！</h3>
+        <p class="text-xs text-slate-500 font-bold">你已經精通了乘法陣列與應用的秘密！</p>
+
+        <!-- Stats breakdown -->
+        <div class="bg-amber-50 rounded-2xl p-3 border border-amber-200 flex flex-col gap-2 text-xs text-amber-950 font-bold">
+          <div class="flex justify-between">
+            <span>出貨總題數：</span>
+            <span id="stat-total-q" class="font-black">10 箱</span>
+          </div>
+          <div class="flex justify-between">
+            <span>正確出貨：</span>
+            <span id="stat-correct-q" class="text-emerald-600 font-black">10 箱 (100%)</span>
+          </div>
+          <div class="flex justify-between">
+            <span>本回合耗費時間：</span>
+            <span id="stat-round-time" class="text-sky-600 font-black">01:45</span>
+          </div>
+          <div class="flex justify-between">
+            <span>練習累計總時間：</span>
+            <span id="stat-total-time" class="text-indigo-600 font-black">03:20</span>
+          </div>
+          <div class="flex justify-between border-t border-amber-200/80 pt-1.5">
+            <span>獲得出貨點數：</span>
+            <span id="stat-pts-earned" class="text-rose-600 font-black text-sm">+100 分</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-1">
+          <button id="cleared-restart-btn" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition">
+            🔄 再挑戰一次
+          </button>
+          <button id="cleared-home-btn" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition">
+            🏠 回首頁選單
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT GAME ENGINE -->
+  <!-- ================================================================= -->
+  <script>
+    /* ===================================================================
+       1. 音效與合成語音模組 (Web Audio API & Web Speech API)
+       =================================================================== */
+    const Sound = {
+      audioCtx: null,
+      init() {
+        if (!this.audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.audioCtx = new AudioContextClass();
+          }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      },
+      playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15) {
+        if (!Game.state.soundEnabled) return;
+        try {
+          this.init();
+          if (!this.audioCtx) return;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + duration);
+        } catch (e) {
+          console.warn('Audio tone error', e);
+        }
+      },
+      click() {
+        this.playTone(700, 'triangle', 0.04, 0.2);
+      },
+      tick() {
+        this.playTone(850, 'sine', 0.03, 0.1);
+      },
+      equals() {
+        this.playTone(523.25, 'sine', 0.08, 0.2);
+        setTimeout(() => this.playTone(659.25, 'sine', 0.12, 0.2), 60);
+      },
+      correct() {
+        this.playTone(523.25, 'triangle', 0.1, 0.2);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.1, 0.2), 80);
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.2, 0.25), 160);
+      },
+      wrong() {
+        this.playTone(260, 'sawtooth', 0.25, 0.25);
+        setTimeout(() => this.playTone(210, 'sawtooth', 0.35, 0.25), 160);
+        setTimeout(() => this.playTone(160, 'sawtooth', 0.45, 0.25), 320);
+      }
+    };
+
+    const Voice = {
+      correctPronunciation(text) {
+        if (!text) return '';
+        return text
+          .replace(/數數/g, '屬樹')
+          .replace(/角色/g, '腳色')
+          .replace(/乘法/g, '成法');
+      },
+      speak(text, onEndCallback) {
+        if (!Game.state.voiceEnabled) {
+          if (onEndCallback) onEndCallback();
+          return;
+        }
+        if (!('speechSynthesis' in window)) {
+          if (onEndCallback) onEndCallback();
+          return;
+        }
+        try {
+          window.speechSynthesis.cancel();
+          const phoneticText = this.correctPronunciation(text);
+          const utterance = new SpeechSynthesisUtterance(phoneticText);
+          utterance.lang = 'zh-TW';
+          utterance.rate = 1.0;
+          utterance.pitch = 1.05;
+          if (onEndCallback) {
+            utterance.onend = onEndCallback;
+            utterance.onerror = onEndCallback;
+          }
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.warn('Voice speak error', e);
+          if (onEndCallback) onEndCallback();
+        }
+      },
+      stop() {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      }
+    };
+
+    /* ===================================================================
+       2. 箱中主題物品庫 (10x10 Array Items)
+       =================================================================== */
+    const THEMES = [
+      { name: '新鮮紅蘋果', icon: '🍎' },
+      { name: '巧克力甜甜圈', icon: '🍩' },
+      { name: '閃耀藍寶石', icon: '💎' },
+      { name: '香草杯子蛋糕', icon: '🧁' },
+      { name: '可愛泰迪熊', icon: '🧸' },
+      { name: '酥脆草莓餅乾', icon: '🍪' },
+      { name: '彩色積木盒', icon: '🧱' },
+      { name: '五彩棒棒糖', icon: '🍭' }
+    ];
+
+    /* ===================================================================
+       3. 核心遊戲引擎 (Game Engine)
+       =================================================================== */
+    const Game = {
+      state: {
+        score: 0,
+        highScore: 0,
+        soundEnabled: true,
+        voiceEnabled: true,
+        
+        // Active Round: 1 (初階), 2 (進階), 3 (限時 15 秒), 4 (乘加乘減應用)
+        currentRound: 1,
+        targetQuestionsTotal: 10,
+        qIndex: 0,
+        correctCount: 0,
+        earnedRoundPts: 0,
+        questions: [],
+
+        // Current Question Dimension
+        currRowItems: 6, // 橫排數量 (1-10)
+        currColRows: 4,  // 直排數量 (1-10)
+        currTheme: THEMES[0],
+
+        // Round 4 specific fields
+        r4Type: 'sub', // 'sub' (缺少) | 'add' (增加)
+        r4Delta: 0,    // number of missing or extra items
+
+        // Calculator State (Way C)
+        calcFormulaStr: '',
+        calcCurrentInput: '0',
+        calcHasComputed: false,
+
+        // Cumulative Practice Timer (Round 1 & Round 2 Accumulate!)
+        cumulativePracticeSeconds: 0,
+        roundSecondsElapsed: 0,
+        timerInterval: null,
+        isTimerRunning: false,
+
+        // Round 3: 15-Second Countdown Timer per question (Changed to 15s!)
+        r3SecondsLeft: 15,
+        r3Interval: null,
+        r3IsRunning: false
+      },
+
+      init() {
+        const savedScore = localStorage.getItem('mult_game_score');
+        const savedHigh = localStorage.getItem('mult_game_high');
+        const savedCumTime = localStorage.getItem('mult_game_cum_time');
+
+        if (savedScore) this.state.score = parseInt(savedScore, 10) || 0;
+        if (savedHigh) this.state.highScore = parseInt(savedHigh, 10) || 0;
+        if (savedCumTime) this.state.cumulativePracticeSeconds = parseInt(savedCumTime, 10) || 0;
+        
+        this.updateHeaderScoreDisplay();
+
+        this.bindEvents();
+      },
+
+      updateHeaderScoreDisplay() {
+        document.getElementById('current-score-text').textContent = this.state.score;
+        localStorage.setItem('mult_game_score', this.state.score);
+        localStorage.setItem('mult_game_high', this.state.highScore);
+        localStorage.setItem('mult_game_cum_time', this.state.cumulativePracticeSeconds);
+      },
+
+      addScore(pts) {
+        this.state.score += pts;
+        this.state.earnedRoundPts += pts;
+        if (this.state.score > this.state.highScore) {
+          this.state.highScore = this.state.score;
+        }
+        this.updateHeaderScoreDisplay();
+      },
+
+      /* -------------------------------------------------------------
+         計時器控制 (Stopwatch Timer - Cumulative in R1 and R2!)
+         ------------------------------------------------------------- */
+      startTimer() {
+        this.stopTimer();
+        this.state.roundSecondsElapsed = 0;
+        this.state.isTimerRunning = true;
+        
+        const isCumulative = (this.state.currentRound === 1 || this.state.currentRound === 2);
+        document.getElementById('timer-title-text').textContent = isCumulative ? '練習累計時間' : '本回合計時';
+        this.updateTimerDisplay();
+
+        this.state.timerInterval = setInterval(() => {
+          if (this.state.isTimerRunning) {
+            this.state.roundSecondsElapsed++;
+            this.state.cumulativePracticeSeconds++;
+            this.updateTimerDisplay();
+          }
+        }, 1000);
+      },
+
+      stopTimer() {
+        if (this.state.timerInterval) {
+          clearInterval(this.state.timerInterval);
+          this.state.timerInterval = null;
+        }
+        this.state.isTimerRunning = false;
+        this.updateHeaderScoreDisplay();
+      },
+
+      formatTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      },
+
+      updateTimerDisplay() {
+        const isCumulative = (this.state.currentRound === 1 || this.state.currentRound === 2);
+        const displaySec = isCumulative ? this.state.cumulativePracticeSeconds : this.state.roundSecondsElapsed;
+        document.getElementById('timer-display').textContent = this.formatTime(displaySec);
+      },
+
+      /* -------------------------------------------------------------
+         第三回合：15 秒倒數計時器 (Round 3 15-Second Countdown)
+         ------------------------------------------------------------- */
+      startR3Countdown() {
+        this.stopR3Countdown();
+        this.state.r3SecondsLeft = 15; // Set to 15s!
+        this.state.r3IsRunning = true;
+        this.updateR3CountdownDisplay();
+
+        this.state.r3Interval = setInterval(() => {
+          if (!this.state.r3IsRunning) return;
+          this.state.r3SecondsLeft--;
+          this.updateR3CountdownDisplay();
+
+          if (this.state.r3SecondsLeft > 0 && this.state.r3SecondsLeft <= 3) {
+            Sound.tick();
+          }
+
+          if (this.state.r3SecondsLeft <= 0) {
+            this.stopR3Countdown();
+            this.handleR3Timeout();
+          }
+        }, 1000);
+      },
+
+      stopR3Countdown() {
+        if (this.state.r3Interval) {
+          clearInterval(this.state.r3Interval);
+          this.state.r3Interval = null;
+        }
+        this.state.r3IsRunning = false;
+      },
+
+      updateR3CountdownDisplay() {
+        const display = document.getElementById('r3-countdown-display');
+        const progress = document.getElementById('r3-countdown-progress');
+        display.textContent = `${this.state.r3SecondsLeft} 秒`;
+        
+        const pct = (this.state.r3SecondsLeft / 15) * 100;
+        progress.style.width = `${pct}%`;
+
+        if (this.state.r3SecondsLeft <= 3) {
+          display.className = 'text-lg font-black text-rose-600 lcd-font animate-ping';
+          progress.className = 'bg-rose-600 h-full transition-all duration-1000 ease-linear animate-pulse';
+        } else {
+          display.className = 'text-lg font-black text-rose-600 lcd-font';
+          progress.className = 'bg-rose-500 h-full transition-all duration-1000 ease-linear';
+        }
+      },
+
+      handleR3Timeout() {
+        const correctVal = this.state.currRowItems * this.state.currColRows;
+        this.triggerShakeAndCry(
+          '⏰ 時間到！出貨超時啦！😭',
+          `15 秒作答時間已過！哭哭～<br>` +
+          `這箱物品：橫排有 <strong>${this.state.currRowItems}</strong> 個 × 直排有 <strong>${this.state.currColRows}</strong> 排。<br>` +
+          `<span class="text-rose-600 font-black text-sm">正確數量應該是 ${correctVal} 個！下一題要抓緊時間喔！</span>`
+        );
+      },
+
+      /* -------------------------------------------------------------
+         回合啟動控制 (Start Round 1, 2, 3, 4)
+         ------------------------------------------------------------- */
+      startRound(roundNum) {
+        this.state.currentRound = roundNum;
+        this.state.targetQuestionsTotal = 10;
+        this.state.qIndex = 0;
+        this.state.correctCount = 0;
+        this.state.earnedRoundPts = 0;
+        this.state.questions = this.generateQuestions(10, roundNum);
+
+        // Update Round Badge
+        const tag = document.getElementById('round-badge-tag');
+        if (roundNum === 1) {
+          tag.textContent = '第一回合：初階啟蒙 (有數量提示)';
+          tag.className = 'px-3 py-1 rounded-xl text-xs font-black bg-emerald-600 text-white';
+        } else if (roundNum === 2) {
+          tag.textContent = '第二回合：進階挑戰 (自主數橫排直排)';
+          tag.className = 'px-3 py-1 rounded-xl text-xs font-black bg-amber-600 text-white';
+        } else if (roundNum === 3) {
+          tag.textContent = '第三回合：極速出貨 (限時 15 秒)';
+          tag.className = 'px-3 py-1 rounded-xl text-xs font-black bg-rose-600 text-white';
+        } else if (roundNum === 4) {
+          tag.textContent = '第四回合：乘加乘減應用 (缺少或增加)';
+          tag.className = 'px-3 py-1 rounded-xl text-xs font-black bg-indigo-600 text-white';
+        }
+
+        // Toggle Round 3 timer UI
+        if (roundNum === 3) {
+          document.getElementById('round3-timer-wrapper').classList.remove('hidden');
+        } else {
+          document.getElementById('round3-timer-wrapper').classList.add('hidden');
+        }
+
+        // Handle Tutorials
+        if (roundNum === 1) {
+          this.playTutorialAnimation();
+        } else if (roundNum === 4) {
+          this.playRound4Tutorial();
+        } else {
+          // Direct Start for R2 or R3
+          document.getElementById('home-view').classList.add('hidden');
+          document.getElementById('game-view').classList.remove('hidden');
+          this.startTimer();
+          this.loadQuestion();
+        }
+      },
+
+      generateQuestions(count, roundNum) {
+        const list = [];
+        for (let i = 0; i < count; i++) {
+          const rowItems = Math.floor(Math.random() * 9) + 2; // 2 to 10
+          const colRows = Math.floor(Math.random() * 9) + 2;  // 2 to 10
+          const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
+          
+          let r4Type = 'sub';
+          let r4Delta = 0;
+          if (roundNum === 4) {
+            r4Type = Math.random() > 0.5 ? 'sub' : 'add';
+            r4Delta = r4Type === 'sub' ? Math.floor(Math.random() * 4) + 1 : Math.floor(Math.random() * 4) + 1;
+          }
+
+          list.push({ rowItems: rowItems, colRows: colRows, theme: theme, r4Type: r4Type, r4Delta: r4Delta });
+        }
+        return list;
+      },
+
+      /* -------------------------------------------------------------
+         第一回合動畫教學 (Round 1 Tutorial)
+         ------------------------------------------------------------- */
+      playTutorialAnimation() {
+        const modal = document.getElementById('tutorial-modal');
+        const grid = document.getElementById('tutorial-grid');
+        modal.classList.remove('hidden');
+
+        grid.innerHTML = '';
+        for (let r = 1; r <= 3; r++) {
+          for (let c = 1; c <= 4; c++) {
+            const apple = document.createElement('div');
+            apple.id = `tut-cell-${r}-${c}`;
+            apple.className = 'w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-xl transition-all duration-300';
+            apple.textContent = '🍎';
+            grid.appendChild(apple);
+          }
+        }
+
+        const stepText = document.getElementById('tutorial-step-text');
+        const calcFormula = document.getElementById('tutorial-calc-formula');
+
+        stepText.textContent = '步驟 1：先數「橫排」👉 一橫排有 1, 2, 3, 4，共 4 個！';
+        calcFormula.textContent = '橫排：4 個';
+        for (let c = 1; c <= 4; c++) {
+          const el = document.getElementById(`tut-cell-1-${c}`);
+          if (el) el.className = 'w-9 h-9 rounded-xl bg-sky-200 border-2 border-sky-500 flex items-center justify-center text-xl highlight-active';
+        }
+        Voice.speak('先數橫排：一橫排有 4 個！');
+
+        setTimeout(() => {
+          stepText.textContent = '步驟 2：再數「直排」👇 共有 1, 2, 3，共 3 排！';
+          calcFormula.textContent = '橫排 4 個 × 直排 3 排';
+          for (let r = 1; r <= 3; r++) {
+            const el = document.getElementById(`tut-cell-${r}-1`);
+            if (el) el.className = 'w-9 h-9 rounded-xl bg-emerald-200 border-2 border-emerald-500 flex items-center justify-center text-xl highlight-active';
+          }
+          Voice.speak('再數直排：一共有 3 排！');
+        }, 2200);
+
+        setTimeout(() => {
+          stepText.textContent = '步驟 3：在計算機按下 4 × 3 ＝ 12！相乘就是總數！';
+          calcFormula.textContent = '4 × 3 ＝ 12 個 (出貨成功！)';
+          Sound.equals();
+          Voice.speak('橫排數量 4 乘以直排數量 3，等於 12 個！這就是箱子乘法的秘密！');
+        }, 4400);
+      },
+
+      finishTutorial() {
+        Voice.stop();
+        document.getElementById('tutorial-modal').classList.add('hidden');
+        document.getElementById('home-view').classList.add('hidden');
+        document.getElementById('game-view').classList.remove('hidden');
+        this.startTimer();
+        this.loadQuestion();
+      },
+
+      /* -------------------------------------------------------------
+         第四回合動畫教學 (Round 4 Tutorial: Add / Sub Application)
+         ------------------------------------------------------------- */
+      playRound4Tutorial() {
+        const modal = document.getElementById('tutorial-r4-modal');
+        const grid = document.getElementById('tut-r4-grid');
+        const bonusSlot = document.getElementById('tut-r4-bonus-slot');
+        modal.classList.remove('hidden');
+
+        grid.innerHTML = '';
+        for (let r = 1; r <= 3; r++) {
+          for (let c = 1; c <= 4; c++) {
+            const donut = document.createElement('div');
+            donut.id = `tut4-cell-${r}-${c}`;
+            donut.className = 'w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-xl transition-all duration-300';
+            donut.textContent = '🍩';
+            grid.appendChild(donut);
+          }
+        }
+        bonusSlot.classList.add('hidden');
+
+        const stepText = document.getElementById('tut-r4-step-text');
+        const formula = document.getElementById('tut-r4-formula');
+
+        // Step 1: Full Box
+        stepText.textContent = '步驟 1：先用乘法算滿箱 👉 橫排 4 個 × 直排 3 排 ＝ 12 個';
+        formula.textContent = '滿箱原本有：4 × 3 ＝ 12 個';
+        formula.className = 'text-xs sm:text-sm font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-300';
+        Voice.speak('先用乘法算滿箱：橫排 4 個乘以直排 3 排，等於 12 個！');
+
+        // Step 2: Missing Case (2 missing)
+        setTimeout(() => {
+          stepText.textContent = '步驟 2（缺少時）：其中 2 個被拿走了！12 － 2 ＝ 10 個！';
+          formula.textContent = '4 × 3 － 缺少 2 個 ＝ 10 個！';
+          formula.className = 'text-xs sm:text-sm font-black text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-300';
+          
+          const c1 = document.getElementById('tut4-cell-3-3');
+          const c2 = document.getElementById('tut4-cell-3-4');
+          if (c1) {
+            c1.className = 'w-9 h-9 rounded-xl bg-rose-100 border-2 border-dashed border-rose-400 flex items-center justify-center text-xs font-black text-rose-600 animate-pulse';
+            c1.textContent = '🚫';
+          }
+          if (c2) {
+            c2.className = 'w-9 h-9 rounded-xl bg-rose-100 border-2 border-dashed border-rose-400 flex items-center justify-center text-xs font-black text-rose-600 animate-pulse';
+            c2.textContent = '🚫';
+          }
+          Sound.wrong();
+          Voice.speak('如果箱子缺少了 2 個空位，就從滿箱減去 2 個，等於 10 個！');
+        }, 2500);
+
+        // Step 3: Bonus Case (2 extra added)
+        setTimeout(() => {
+          stepText.textContent = '步驟 3（增加時）：若外加多送 2 個！12 ＋ 2 ＝ 14 個！';
+          formula.textContent = '4 × 3 ＋ 增加 2 個 ＝ 14 個！';
+          formula.className = 'text-xs sm:text-sm font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-300';
+          
+          // Restore cells
+          const c1 = document.getElementById('tut4-cell-3-3');
+          const c2 = document.getElementById('tut4-cell-3-4');
+          if (c1) { c1.className = 'w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-xl'; c1.textContent = '🍩'; }
+          if (c2) { c2.className = 'w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-xl'; c2.textContent = '🍩'; }
+          
+          bonusSlot.classList.remove('hidden');
+          Sound.equals();
+          Voice.speak('如果是箱子外額外增加了 2 個，就用滿箱加上 2 個，等於 14 個！');
+        }, 5200);
+      },
+
+      finishRound4Tutorial() {
+        Voice.stop();
+        document.getElementById('tutorial-r4-modal').classList.add('hidden');
+        document.getElementById('home-view').classList.add('hidden');
+        document.getElementById('game-view').classList.remove('hidden');
+        this.startTimer();
+        this.loadQuestion();
+      },
+
+      /* -------------------------------------------------------------
+         載入與渲染題目 (Load & Render Question)
+         ------------------------------------------------------------- */
+      loadQuestion() {
+        const q = this.state.questions[this.state.qIndex];
+        this.state.currRowItems = q.rowItems;
+        this.state.currColRows = q.colRows;
+        this.state.currTheme = q.theme;
+        this.state.r4Type = q.r4Type || 'sub';
+        this.state.r4Delta = q.r4Delta || 0;
+
+        document.getElementById('game-q-curr').textContent = this.state.qIndex + 1;
+        document.getElementById('prompt-row-num').textContent = q.rowItems;
+        document.getElementById('prompt-col-num').textContent = q.colRows;
+        document.getElementById('explain-row-items').textContent = q.rowItems;
+        document.getElementById('explain-col-rows').textContent = q.colRows;
+        document.getElementById('theme-item-name').textContent = q.theme.name;
+        document.getElementById('theme-item-name-alt').textContent = q.theme.icon;
+
+        document.getElementById('addition-explain-box').classList.add('hidden');
+        document.getElementById('toggle-addition-explain-btn').textContent = '展開連加算式';
+        document.getElementById('box-stamp-overlay').classList.add('hidden');
+        document.getElementById('box-card-container').classList.remove('animate-shake');
+
+        // Banners visibility
+        const dimBanner = document.getElementById('dimension-banner');
+        const noHintBanner = document.getElementById('no-hint-banner');
+        const r4Banner = document.getElementById('r4-delta-banner');
+        const boxSubtitle = document.getElementById('box-mode-subtitle');
+
+        if (this.state.currentRound === 1) {
+          dimBanner.classList.remove('hidden');
+          noHintBanner.classList.add('hidden');
+          r4Banner.classList.add('hidden');
+          boxSubtitle.textContent = '初階模式・附有橫排與直排數量提示';
+        } else if (this.state.currentRound === 2) {
+          dimBanner.classList.add('hidden');
+          noHintBanner.classList.remove('hidden');
+          r4Banner.classList.add('hidden');
+          boxSubtitle.textContent = '進階模式・無提示，請自己數橫排與直排';
+        } else if (this.state.currentRound === 3) {
+          dimBanner.classList.add('hidden');
+          noHintBanner.classList.remove('hidden');
+          r4Banner.classList.add('hidden');
+          boxSubtitle.textContent = '極速模式・限時 15 秒，請快速算出！';
+        } else if (this.state.currentRound === 4) {
+          dimBanner.classList.remove('hidden');
+          noHintBanner.classList.add('hidden');
+          r4Banner.classList.remove('hidden');
+          boxSubtitle.textContent = '乘加乘減應用・滿箱數量與缺少/增加整合計算';
+
+          const textEl = document.getElementById('r4-delta-text');
+          const badgeEl = document.getElementById('r4-delta-badge');
+          if (this.state.r4Type === 'sub') {
+            textEl.innerHTML = `⚠️ 箱中【缺少了 ${this.state.r4Delta} 個】空位！請用乘法算出滿箱後【減去缺少】求總數！`;
+            badgeEl.textContent = `－${this.state.r4Delta} 缺少`;
+            badgeEl.className = 'px-2 py-0.5 bg-rose-500 text-white rounded-lg text-xs font-black';
+          } else {
+            textEl.innerHTML = `🎁 箱外額外【增加了 ${this.state.r4Delta} 個】加贈！請算出滿箱後【加上增加】求總數！`;
+            badgeEl.textContent = `＋${this.state.r4Delta} 增加`;
+            badgeEl.className = 'px-2 py-0.5 bg-emerald-600 text-white rounded-lg text-xs font-black';
+          }
+        }
+
+        // Render Physical Box & Rulers
+        this.renderBoxArray(q.rowItems, q.colRows, q.theme.icon, this.state.r4Type, this.state.r4Delta);
+
+        // Reset Calculator
+        this.resetCalculator();
+
+        // Round 3: Start 15s Countdown
+        if (this.state.currentRound === 3) {
+          this.startR3Countdown();
+        }
+
+        // Voice prompt
+        if (this.state.currentRound === 1) {
+          Voice.speak(`第 ${this.state.qIndex + 1} 箱。橫排有 ${q.rowItems} 個，直排有 ${q.colRows} 排，請按計算機算出箱子裡一共有多少東西！`);
+        } else if (this.state.currentRound === 2) {
+          Voice.speak(`第 ${this.state.qIndex + 1} 箱。請自己數數看橫排有幾個、直排有幾排，再按計算機相乘！`);
+        } else if (this.state.currentRound === 3) {
+          Voice.speak(`第 ${this.state.qIndex + 1} 箱。限時 15 秒開始！`);
+        } else if (this.state.currentRound === 4) {
+          if (this.state.r4Type === 'sub') {
+            Voice.speak(`第 ${this.state.qIndex + 1} 箱。滿箱是橫排 ${q.rowItems} 個乘以直排 ${q.colRows} 排，但缺少了 ${this.state.r4Delta} 個，請用乘法減去缺少數量算出總數！`);
+          } else {
+            Voice.speak(`第 ${this.state.qIndex + 1} 箱。滿箱是橫排 ${q.rowItems} 個乘以直排 ${q.colRows} 排，外加增加了 ${this.state.r4Delta} 個，請用乘法加上增加數量算出總數！`);
+          }
+        }
+      },
+
+      /* -------------------------------------------------------------
+         渲染 2D 陣列箱子與刻度 (Render Box Array & Rulers)
+         ------------------------------------------------------------- */
+      renderBoxArray(rowItems, colRows, icon, r4Type, r4Delta) {
+        const isRound1 = (this.state.currentRound === 1 || this.state.currentRound === 4);
+
+        // Top Horizontal Ruler (橫排刻度)
+        const topRuler = document.getElementById('top-ruler-chips-container');
+        topRuler.innerHTML = '';
+        for (let c = 1; c <= rowItems; c++) {
+          const chip = document.createElement('span');
+          chip.className = 'w-6 sm:w-7 h-5 rounded bg-sky-200 text-sky-900 text-[10px] font-black flex items-center justify-center';
+          chip.textContent = isRound1 ? c : '•';
+          topRuler.appendChild(chip);
+        }
+
+        // Left Vertical Ruler (直排刻度)
+        const leftRuler = document.getElementById('left-ruler-chips-container');
+        leftRuler.innerHTML = '';
+        for (let r = 1; r <= colRows; r++) {
+          const chip = document.createElement('span');
+          chip.className = 'w-5 h-6 sm:h-7 rounded bg-emerald-200 text-emerald-900 text-[10px] font-black flex items-center justify-center';
+          chip.textContent = isRound1 ? r : '•';
+          leftRuler.appendChild(chip);
+        }
+
+        // Physical Box Grid: colRows rows x rowItems cols
+        const boxGrid = document.getElementById('storage-box-grid');
+        boxGrid.innerHTML = '';
+        boxGrid.style.gridTemplateColumns = `repeat(${rowItems}, minmax(0, 1fr))`;
+
+        const totalCells = rowItems * colRows;
+        const missingStartIndex = (this.state.currentRound === 4 && r4Type === 'sub') ? (totalCells - r4Delta) : 9999;
+
+        for (let idx = 0; idx < totalCells; idx++) {
+          const r = Math.floor(idx / rowItems) + 1;
+          const c = (idx % rowItems) + 1;
+          const cell = document.createElement('div');
+
+          if (idx >= missingStartIndex) {
+            // Missing Empty Slot (缺少空位)
+            cell.className = 'w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-rose-50 border-2 border-dashed border-rose-300 shadow-inner flex flex-col items-center justify-center text-xs text-rose-500 font-black select-none';
+            cell.innerHTML = `<span>🚫</span><span class="text-[8px] leading-none">缺1</span>`;
+            cell.title = `缺少此物品`;
+          } else {
+            // Normal Filled Cell
+            cell.className = 'w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-50/90 border border-amber-200 shadow-xs flex items-center justify-center text-lg sm:text-xl hover:scale-110 hover:bg-amber-100 transition cursor-pointer select-none';
+            cell.innerHTML = `<span>${icon}</span>`;
+            cell.title = `第 ${r} 直排，第 ${c} 橫排`;
+          }
+          boxGrid.appendChild(cell);
+        }
+
+        // Round 4: Bonus Extra Tray (If Type is 'add')
+        const bonusTray = document.getElementById('r4-bonus-tray');
+        const bonusRow = document.getElementById('r4-bonus-items-row');
+        if (this.state.currentRound === 4 && r4Type === 'add') {
+          bonusTray.classList.remove('hidden');
+          bonusRow.innerHTML = '';
+          for (let b = 1; b <= r4Delta; b++) {
+            const extra = document.createElement('div');
+            extra.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border-2 border-amber-400 shadow-xs flex items-center justify-center text-lg animate-bounce';
+            extra.innerHTML = `<span>${icon}</span>`;
+            bonusRow.appendChild(extra);
+          }
+        } else {
+          bonusTray.classList.add('hidden');
+        }
+      },
+
+      /* -------------------------------------------------------------
+         計算機邏輯 (Way C)
+         ------------------------------------------------------------- */
+      resetCalculator() {
+        this.state.calcFormulaStr = '';
+        this.state.calcCurrentInput = '0';
+        this.state.calcHasComputed = false;
+        this.updateCalcDisplay();
+      },
+
+      updateCalcDisplay() {
+        const formulaEl = document.getElementById('calc-formula-display');
+        const mainEl = document.getElementById('calc-main-display');
+
+        if (this.state.currentRound === 4) {
+          formulaEl.textContent = this.state.calcFormulaStr || `滿箱 ${this.state.currRowItems}×${this.state.currColRows} ${this.state.r4Type === 'sub' ? '－' + this.state.r4Delta : '＋' + this.state.r4Delta} ＝ ？`;
+        } else {
+          formulaEl.textContent = this.state.calcFormulaStr || `橫排 × 直排 ＝ ？`;
+        }
+        mainEl.textContent = this.state.calcCurrentInput || '0';
+      },
+
+      handleCalcKey(key) {
+        Sound.click();
+
+        if (key === 'clear') {
+          this.resetCalculator();
+          return;
+        }
+
+        if (key === 'backspace') {
+          if (this.state.calcCurrentInput.length > 1) {
+            this.state.calcCurrentInput = this.state.calcCurrentInput.slice(0, -1);
+          } else {
+            this.state.calcCurrentInput = '0';
+          }
+          this.updateCalcDisplay();
+          return;
+        }
+
+        // Fill formula shortcut (Handles R1-R3 & R4!)
+        if (key === 'fill-formula') {
+          if (this.state.currentRound === 4) {
+            const base = this.state.currRowItems * this.state.currColRows;
+            const op = this.state.r4Type === 'sub' ? '-' : '+';
+            const opSym = this.state.r4Type === 'sub' ? '－' : '＋';
+            const finalVal = this.state.r4Type === 'sub' ? (base - this.state.r4Delta) : (base + this.state.r4Delta);
+            
+            this.state.calcFormulaStr = `${this.state.currRowItems} × ${this.state.currColRows} ${opSym} ${this.state.r4Delta}`;
+            this.state.calcCurrentInput = String(finalVal);
+            this.state.calcHasComputed = true;
+            this.updateCalcDisplay();
+            Sound.equals();
+            Voice.speak(`滿箱 ${base} ${this.state.r4Type === 'sub' ? '減去缺少' : '加上增加'} ${this.state.r4Delta} 等於 ${finalVal}`);
+          } else {
+            this.state.calcFormulaStr = `${this.state.currRowItems} × ${this.state.currColRows}`;
+            this.state.calcCurrentInput = String(this.state.currRowItems * this.state.currColRows);
+            this.state.calcHasComputed = true;
+            this.updateCalcDisplay();
+            Sound.equals();
+            Voice.speak(`橫排 ${this.state.currRowItems} 乘以直排 ${this.state.currColRows} 等於 ${this.state.currRowItems * this.state.currColRows}`);
+          }
+          return;
+        }
+
+        // Operators (+, -, ×, ÷)
+        if (['add', 'sub', 'mul', 'div'].includes(key)) {
+          const opSymbol = key === 'mul' ? '×' : key === 'div' ? '÷' : key === 'add' ? '+' : '-';
+          if (this.state.calcFormulaStr && !this.state.calcHasComputed) {
+            this.calculateExpression();
+          }
+          this.state.calcFormulaStr = `${this.state.calcCurrentInput} ${opSymbol}`;
+          this.state.calcCurrentInput = '0';
+          this.state.calcHasComputed = false;
+          this.updateCalcDisplay();
+          return;
+        }
+
+        // Equals (=)
+        if (key === 'equals') {
+          this.calculateExpression();
+          Sound.equals();
+          return;
+        }
+
+        // Digits (0-9, 00)
+        if (!isNaN(key) || key === '00') {
+          if (this.state.calcHasComputed) {
+            this.state.calcCurrentInput = key === '00' ? '0' : key;
+            this.state.calcFormulaStr = '';
+            this.state.calcHasComputed = false;
+          } else {
+            if (this.state.calcCurrentInput === '0') {
+              this.state.calcCurrentInput = key === '00' ? '0' : key;
+            } else {
+              if (this.state.calcCurrentInput.length < 8) {
+                this.state.calcCurrentInput += key;
+              }
+            }
+          }
+          this.updateCalcDisplay();
+        }
+      },
+
+      calculateExpression() {
+        if (!this.state.calcFormulaStr) return;
+        const parts = this.state.calcFormulaStr.trim().split(' ');
+        if (parts.length >= 2) {
+          const num1 = parseFloat(parts[0]);
+          const op = parts[1];
+          const num2 = parseFloat(this.state.calcCurrentInput);
+          let result = 0;
+
+          if (op === '×') result = num1 * num2;
+          else if (op === '÷') result = num2 !== 0 ? Math.round((num1 / num2) * 100) / 100 : 0;
+          else if (op === '+') result = num1 + num2;
+          else if (op === '-') result = num1 - num2;
+
+          this.state.calcFormulaStr = `${num1} ${op} ${num2} ＝`;
+          this.state.calcCurrentInput = String(result);
+          this.state.calcHasComputed = true;
+          this.updateCalcDisplay();
+        }
+      },
+
+      /* -------------------------------------------------------------
+         送出答案驗證 (Submit & Verification)
+         ------------------------------------------------------------- */
+      submitAnswer() {
+        this.stopR3Countdown();
+
+        const playerVal = parseInt(this.state.calcCurrentInput, 10);
+        let correctVal = this.state.currRowItems * this.state.currColRows;
+        
+        if (this.state.currentRound === 4) {
+          correctVal = (this.state.r4Type === 'sub') ? (correctVal - this.state.r4Delta) : (correctVal + this.state.r4Delta);
+        }
+
+        if (isNaN(playerVal) || playerVal < 0) {
+          alert('請在計算機上輸入或計算出箱子裡的總數量喔！');
+          if (this.state.currentRound === 3 && this.state.r3SecondsLeft > 0) {
+            this.startR3Countdown();
+          }
+          return;
+        }
+
+        const isCorrect = (playerVal === correctVal);
+
+        if (isCorrect) {
+          document.getElementById('box-stamp-overlay').classList.remove('hidden');
+          Sound.correct();
+          this.state.correctCount++;
+          const pts = (this.state.currentRound === 3 || this.state.currentRound === 4) ? 15 : 10;
+          this.addScore(pts);
+
+          let formulaSummary = '';
+          if (this.state.currentRound === 4) {
+            const base = this.state.currRowItems * this.state.currColRows;
+            const opSym = this.state.r4Type === 'sub' ? '－' : '＋';
+            formulaSummary = `滿箱 ${this.state.currRowItems}×${this.state.currColRows} (${base}) ${opSym} ${this.state.r4Delta} ＝ ${correctVal} 個！`;
+          } else {
+            formulaSummary = `橫排 ${this.state.currRowItems} 個 × 直排 ${this.state.currColRows} 排 ＝ ${correctVal} 個！`;
+          }
+
+          const msg = `
+            <div class="text-base text-emerald-800 font-black mb-1">
+              ${formulaSummary}
+            </div>
+            <p class="text-xs text-slate-500">
+              計算精準！一箱共 ${correctVal} 份 ${this.state.currTheme.name}，已經打包裝箱順利出貨囉！
+            </p>
+            <div class="mt-2 text-emerald-600 font-black">
+              +${pts} 點出貨積分入手！⭐
+            </div>
+          `;
+          this.showFeedback(true, '出貨成功！數量完全吻合！', msg);
+          Voice.speak(`太厲害了！正確答案是 ${correctVal}！打包出貨成功！`);
+        } else {
+          // Wrong Answer!
+          const diff = playerVal - correctVal;
+          const diffText = diff > 0 ? `多算了 ${diff} 個` : `少算了 ${Math.abs(diff)} 個`;
+
+          let correctExplain = '';
+          if (this.state.currentRound === 4) {
+            const base = this.state.currRowItems * this.state.currColRows;
+            const opSym = this.state.r4Type === 'sub' ? '－' : '＋';
+            correctExplain = `滿箱 ${this.state.currRowItems} × ${this.state.currColRows} ＝ ${base}，再 ${opSym} ${this.state.r4Delta} ＝ <strong>${correctVal}</strong>`;
+          } else {
+            correctExplain = `橫排 ${this.state.currRowItems} × 直排 ${this.state.currColRows} ＝ <strong>${correctVal}</strong>`;
+          }
+
+          const bodyHtml = `
+            <div class="text-slate-700 font-bold mb-2">
+              你輸入了 <strong class="text-rose-600 text-base">${playerVal}</strong>（${diffText}）！
+            </div>
+            <div class="p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-amber-900 font-mono text-xs">
+              正確算式：${correctExplain}
+            </div>
+            <p class="text-[11px] text-slate-400 mt-2">
+              別灰心！依照算式步驟，一步步計算就能算出精準數字！
+            </p>
+          `;
+          this.triggerShakeAndCry('數量不符！箱子無法出貨 ❌', bodyHtml);
+        }
+      },
+
+      /* -------------------------------------------------------------
+         觸發震動與哭臉效果 (Shake & Crying Face Effect)
+         ------------------------------------------------------------- */
+      triggerShakeAndCry(title, bodyHtml) {
+        Sound.wrong();
+
+        const boxContainer = document.getElementById('box-card-container');
+        boxContainer.classList.remove('animate-shake');
+        void boxContainer.offsetWidth;
+        boxContainer.classList.add('animate-shake');
+
+        const modal = document.getElementById('feedback-modal');
+        const card = document.getElementById('feedback-card');
+        const icon = document.getElementById('feedback-icon');
+        const titleEl = document.getElementById('feedback-title');
+        const bodyEl = document.getElementById('feedback-body');
+
+        modal.classList.remove('hidden');
+
+        icon.textContent = '😭';
+        icon.className = 'text-6xl animate-cry';
+        titleEl.textContent = title;
+        titleEl.className = 'text-xl font-black text-rose-600';
+        card.className = 'bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border-4 border-rose-500 text-center flex flex-col gap-3 relative animate-shake';
+        bodyEl.innerHTML = bodyHtml;
+
+        Voice.speak('嗚嗚～算錯出貨失敗了，請看正確答案喔！');
+      },
+
+      showFeedback(isCorrect, title, bodyHtml) {
+        const modal = document.getElementById('feedback-modal');
+        const card = document.getElementById('feedback-card');
+        const icon = document.getElementById('feedback-icon');
+        const titleEl = document.getElementById('feedback-title');
+        const bodyEl = document.getElementById('feedback-body');
+
+        modal.classList.remove('hidden');
+
+        if (isCorrect) {
+          icon.textContent = '📦';
+          icon.className = 'text-5xl animate-bounce';
+          titleEl.textContent = title;
+          titleEl.className = 'text-xl font-black text-emerald-600';
+          card.className = 'bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border-4 border-emerald-400 text-center flex flex-col gap-3 relative animate-pop';
+          bodyEl.innerHTML = bodyHtml;
+        }
+      },
+
+      nextQuestion() {
+        document.getElementById('feedback-modal').classList.add('hidden');
+        this.state.qIndex++;
+
+        if (this.state.qIndex >= this.state.targetQuestionsTotal) {
+          this.showClearedModal();
+        } else {
+          this.loadQuestion();
+        }
+      },
+
+      showClearedModal() {
+        this.stopTimer();
+        this.stopR3Countdown();
+        Sound.correct();
+
+        const total = this.state.targetQuestionsTotal;
+        const correct = this.state.correctCount;
+        const roundTimeSec = this.state.roundSecondsElapsed;
+        const cumTimeSec = this.state.cumulativePracticeSeconds;
+
+        document.getElementById('stat-total-q').textContent = `${total} 箱`;
+        document.getElementById('stat-correct-q').textContent = `${correct} 箱 (${Math.round((correct / total) * 100)}%)`;
+        document.getElementById('stat-round-time').textContent = this.formatTime(roundTimeSec);
+        document.getElementById('stat-total-time').textContent = this.formatTime(cumTimeSec);
+        document.getElementById('stat-pts-earned').textContent = `+${this.state.earnedRoundPts} 分`;
+
+        document.getElementById('cleared-modal').classList.remove('hidden');
+
+        Voice.speak(`太棒了！完成出貨挑戰！答對 ${correct} 箱！獲得 ${this.state.earnedRoundPts} 點！`);
+      },
+
+      goHome() {
+        Voice.stop();
+        this.stopTimer();
+        this.stopR3Countdown();
+        document.getElementById('tutorial-modal').classList.add('hidden');
+        document.getElementById('tutorial-r4-modal').classList.add('hidden');
+        document.getElementById('feedback-modal').classList.add('hidden');
+        document.getElementById('cleared-modal').classList.add('hidden');
+        document.getElementById('game-view').classList.add('hidden');
+        document.getElementById('home-view').classList.remove('hidden');
+      },
+
+      /* -------------------------------------------------------------
+         事件綁定 (Event Listeners)
+         ------------------------------------------------------------- */
+      bindEvents() {
+        document.getElementById('nav-home-btn').onclick = () => {
+          if (confirm('確定要回到主頁選單嗎？')) {
+            this.goHome();
+          }
+        };
+
+        document.getElementById('exit-game-btn').onclick = () => {
+          if (confirm('確定要結束目前回合回主頁嗎？')) {
+            this.goHome();
+          }
+        };
+
+        document.getElementById('restart-game-btn').onclick = () => {
+          if (confirm('確定要重新開始玩這個回合嗎？')) {
+            this.startRound(this.state.currentRound);
+          }
+        };
+
+        document.getElementById('sound-toggle-btn').onclick = (e) => {
+          this.state.soundEnabled = !this.state.soundEnabled;
+          e.currentTarget.textContent = this.state.soundEnabled ? '🔔' : '🔕';
+        };
+
+        document.getElementById('voice-toggle-btn').onclick = (e) => {
+          this.state.voiceEnabled = !this.state.voiceEnabled;
+          e.currentTarget.textContent = this.state.voiceEnabled ? '🗣️' : '🤐';
+        };
+
+        // Reset Score Data & Cumulative Time
+        document.getElementById('reset-all-score-btn').onclick = () => {
+          if (confirm('確定要清空所有出貨點數與累積練習時間嗎？')) {
+            localStorage.removeItem('mult_game_score');
+            localStorage.removeItem('mult_game_high');
+            localStorage.removeItem('mult_game_cum_time');
+            this.state.score = 0;
+            this.state.highScore = 0;
+            this.state.cumulativePracticeSeconds = 0;
+            this.updateHeaderScoreDisplay();
+            alert('紀錄與練習時間已重置！');
+          }
+        };
+
+        // Round 1 Tutorial Modal Buttons
+        document.getElementById('skip-tutorial-btn').onclick = () => this.finishTutorial();
+        document.getElementById('start-round1-btn').onclick = () => this.finishTutorial();
+        document.getElementById('replay-tutorial-btn').onclick = () => this.playTutorialAnimation();
+
+        // Round 4 Tutorial Modal Buttons
+        document.getElementById('skip-r4-tutorial-btn').onclick = () => this.finishRound4Tutorial();
+        document.getElementById('start-round4-btn').onclick = () => this.finishRound4Tutorial();
+        document.getElementById('replay-r4-tutorial-btn').onclick = () => this.playRound4Tutorial();
+
+        // Read Prompt Button
+        document.getElementById('read-box-prompt-btn').onclick = () => {
+          if (this.state.currentRound === 1) {
+            Voice.speak(`箱子橫排是 ${this.state.currRowItems} 個，直排是 ${this.state.currColRows} 排，請用乘法算出一共有多少個！`);
+          } else if (this.state.currentRound === 4) {
+            if (this.state.r4Type === 'sub') {
+              Voice.speak(`滿箱原本是橫排 ${this.state.currRowItems} 個乘以直排 ${this.state.currColRows} 排，但缺少了 ${this.state.r4Delta} 個，請用乘法減去缺少數量！`);
+            } else {
+              Voice.speak(`滿箱是橫排 ${this.state.currRowItems} 個乘以直排 ${this.state.currColRows} 排，外加增加了 ${this.state.r4Delta} 個，請用乘法加上增加數量！`);
+            }
+          } else {
+            Voice.speak(`請自己數橫排有幾個、直排有幾排，用乘法算出總數！`);
+          }
+        };
+
+        // Repeated Addition Explanation Toggle
+        document.getElementById('toggle-addition-explain-btn').onclick = () => {
+          const box = document.getElementById('addition-explain-box');
+          const isHidden = box.classList.contains('hidden');
+          if (isHidden) {
+            const rows = this.state.currColRows;
+            const items = this.state.currRowItems;
+            const terms = Array(rows).fill(items).join(' ＋ ');
+            box.innerHTML = `
+              <span>連加思考：一橫排有 <strong>${items}</strong> 個，共有 <strong>${rows}</strong> 排：</span><br>
+              <span class="text-sm font-black text-amber-700">${terms} ＝ ${items * rows}</span><br>
+              <span class="text-[11px] text-slate-500">這就是乘法：橫排 ${items} × 直排 ${rows} ＝ ${items * rows}！更快速！</span>
+            `;
+            box.classList.remove('hidden');
+            document.getElementById('toggle-addition-explain-btn').textContent = '收起連加算式';
+          } else {
+            box.classList.add('hidden');
+            document.getElementById('toggle-addition-explain-btn').textContent = '展開連加算式';
+          }
+        };
+
+        // Calculator Buttons (Way C)
+        document.querySelectorAll('.calc-btn').forEach(btn => {
+          btn.onclick = () => {
+            const key = btn.getAttribute('data-key');
+            this.handleCalcKey(key);
+          };
+        });
+
+        // Submit Answer Button
+        document.getElementById('submit-answer-btn').onclick = () => {
+          this.submitAnswer();
+        };
+
+        // Feedback Next Button
+        document.getElementById('feedback-next-btn').onclick = () => {
+          this.nextQuestion();
+        };
+
+        // Cleared Modal Buttons
+        document.getElementById('cleared-restart-btn').onclick = () => {
+          document.getElementById('cleared-modal').classList.add('hidden');
+          this.startRound(this.state.currentRound);
+        };
+        document.getElementById('cleared-home-btn').onclick = () => {
+          this.goHome();
+        };
+
+        // Keyboard support
+        window.addEventListener('keydown', (e) => {
+          if (document.getElementById('game-view').classList.contains('hidden')) return;
+          if (e.key >= '0' && e.key <= '9') {
+            this.handleCalcKey(e.key);
+          } else if (e.key === '*' || e.key === 'x' || e.key === 'X') {
+            this.handleCalcKey('mul');
+          } else if (e.key === '/') {
+            this.handleCalcKey('div');
+          } else if (e.key === '+') {
+            this.handleCalcKey('add');
+          } else if (e.key === '-') {
+            this.handleCalcKey('sub');
+          } else if (e.key === 'Enter' || e.key === '=') {
+            if (this.state.calcFormulaStr && !this.state.calcHasComputed) {
+              this.handleCalcKey('equals');
+            } else {
+              this.submitAnswer();
+            }
+          } else if (e.key === 'Backspace') {
+            this.handleCalcKey('backspace');
+          } else if (e.key === 'Escape') {
+            this.handleCalcKey('clear');
+          }
+        });
+      }
+    };
+
+    // Initialize Game on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      Game.init();
+    });
+  </script>
+</body>
+</html>
